@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:nepali_date_picker/nepali_date_picker.dart';
 
+import 'core/services/nepali_date_service.dart';
 import 'src/storage.dart';
 import 'src/auth_service.dart';
 import 'src/db.dart';
@@ -440,14 +442,15 @@ class GroceryHomePage extends StatefulWidget {
 
 class _GroceryHomePageState extends State<GroceryHomePage> {
   final GroceryStorage _storage = GroceryStorage();
+  final NepaliDateService _dateService = NepaliDateService();
   final List<GroceryItem> _items = [];
   bool _loading = true;
   int _selectedIndex = 0;
-  DateTime _viewingMonth = DateTime.now();
+  NepaliDateTime _viewingMonth = NepaliDateTime.now();
   String _searchQuery = '';
   String _sortBy = 'time'; // 'time', 'amount'
   bool _isAscending = false;
-  DateTime _itemsFilterMonth = DateTime.now();
+  NepaliDateTime _itemsFilterMonth = NepaliDateTime.now();
 
   @override
   void initState() {
@@ -476,39 +479,47 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   double get _avgBasket => _items.isEmpty ? 0.0 : _totalSpent / _items.length;
 
   double get _thisMonthSpent {
-    final now = DateTime.now();
+    final now = NepaliDateTime.now();
     return _items
-        .where((item) => item.date.month == now.month && item.date.year == now.year)
+        .where((item) => _dateService.isSameBSMonth(item.date, now))
         .fold(0.0, (sum, item) => sum + item.total);
   }
 
   double get _thisMonthUnits {
-    final now = DateTime.now();
+    final now = NepaliDateTime.now();
     return _items
-        .where((item) => item.date.month == now.month && item.date.year == now.year)
+        .where((item) => _dateService.isSameBSMonth(item.date, now))
         .fold(0.0, (sum, item) => sum + item.quantity);
   }
 
   double get _thisMonthAvgBasket {
-    final now = DateTime.now();
-    final monthItems = _items.where((item) => item.date.month == now.month && item.date.year == now.year).toList();
+    final now = NepaliDateTime.now();
+    final monthItems = _items.where((item) => _dateService.isSameBSMonth(item.date, now)).toList();
     return monthItems.isEmpty ? 0.0 : _thisMonthSpent / monthItems.length;
   }
 
   int get _shoppingDays {
-    final now = DateTime.now();
+    final now = NepaliDateTime.now();
     return _items
-        .where((item) => item.date.month == now.month && item.date.year == now.year)
-        .map((item) => "${item.date.year}-${item.date.month}-${item.date.day}")
+        .where((item) => _dateService.isSameBSMonth(item.date, now))
+        .map((item) {
+          final bsDate = _dateService.convertADToBS(item.date);
+          return "${bsDate.year}-${bsDate.month}-${bsDate.day}";
+        })
         .toSet()
         .length;
   }
 
   List<double> get _weeklySpend {
-    final now = DateTime.now();
-    final dates = List.generate(7, (i) => DateTime(now.year, now.month, now.day - (6 - i)));
+    final now = NepaliDateTime.now();
+    final dates = List.generate(7, (i) => now.subtract(Duration(days: 6 - i)));
     return dates.map((day) {
-      return _items.where((item) => item.date.year == day.year && item.date.month == day.month && item.date.day == day.day).fold(0.0, (sum, item) => sum + item.total);
+      return _items
+          .where((item) {
+            final bsItem = _dateService.convertADToBS(item.date);
+            return bsItem.year == day.year && bsItem.month == day.month && bsItem.day == day.day;
+          })
+          .fold(0.0, (sum, item) => sum + item.total);
     }).toList();
   }
 
@@ -587,7 +598,16 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
 
     return Scaffold(
       extendBody: true,
-      body: _loading ? const Center(child: CircularProgressIndicator()) : pages[_selectedIndex],
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              top: true,
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: pages[_selectedIndex],
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
         shape: const CircleBorder(),
         backgroundColor: const Color(0xFF4AB878),
@@ -648,9 +668,9 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Here is your spending overview',
-                        style: TextStyle(
+                      Text(
+                        'Spend overview — ${_dateService.formatBSMonthYear(NepaliDateTime.now())}',
+                        style: const TextStyle(
                           color: Colors.white38,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -707,7 +727,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   Widget _buildItemsTab(BuildContext context) {
     List<GroceryItem> filteredItems = _items.where((item) {
       final matchesSearch = item.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesMonth = item.date.month == _itemsFilterMonth.month && item.date.year == _itemsFilterMonth.year;
+      final matchesMonth = _dateService.isSameBSMonth(item.date, _itemsFilterMonth);
       return matchesSearch && matchesMonth;
     }).toList();
 
@@ -727,16 +747,16 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             Icons.list_alt,
             trailing: InkWell(
               onTap: () async {
-                final picked = await showDatePicker(
+                final picked = await showNepaliDatePicker(
                   context: context,
                   initialDate: _itemsFilterMonth,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime.now(),
+                  firstDate: NepaliDateTime(2000),
+                  lastDate: NepaliDateTime.now(),
                   initialDatePickerMode: DatePickerMode.year,
                 );
                 if (picked != null) {
                   setState(() {
-                    _itemsFilterMonth = DateTime(picked.year, picked.month);
+                    _itemsFilterMonth = NepaliDateTime(picked.year, picked.month);
                   });
                 }
               },
@@ -752,7 +772,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      DateFormat('MMM yyyy').format(_itemsFilterMonth).toUpperCase(),
+                      _dateService.formatBSMonthYear(_itemsFilterMonth).toUpperCase(),
                       style: const TextStyle(color: Color(0xFF4AB878), fontSize: 12, fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(width: 4),
@@ -858,12 +878,12 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
     final weekValues = List<double>.filled(4, 0.0);
     
     final filteredItems = _items.where((item) => 
-      item.date.month == _viewingMonth.month && 
-      item.date.year == _viewingMonth.year
+      _dateService.isSameBSMonth(item.date, _viewingMonth)
     ).toList();
 
     for (final item in filteredItems) {
-      final weekOfMonth = ((item.date.day - 1) ~/ 7).clamp(0, 3);
+      final bsDate = _dateService.convertADToBS(item.date);
+      final weekOfMonth = ((bsDate.day - 1) ~/ 7).clamp(0, 3);
       weekValues[weekOfMonth] += item.total;
     }
 
@@ -1070,7 +1090,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       child: Text(
-                        DateFormat('EEE, MMM d').format(DateTime.now()),
+                        NepaliDateFormat('EEE, MMM d').format(NepaliDateTime.now()),
                         style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 11, fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1169,7 +1189,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   Widget _buildChartCard(BuildContext context) {
     final data = _weeklySpend;
     final maxValue = data.isEmpty ? 1.0 : data.reduce((a, b) => a > b ? a : b);
-    final monthName = DateFormat('MMMM').format(DateTime.now()).toUpperCase();
+    final monthName = NepaliDateFormat('MMMM').format(NepaliDateTime.now()).toUpperCase();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1193,10 +1213,10 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
               final value = data[index];
               final height = maxValue == 0 ? 10.0 : 20 + (value / maxValue) * 70;
               final isTop = value == maxValue && value > 0;
-              final date = DateTime.now().subtract(Duration(days: 6 - index));
+              final date = NepaliDateTime.now().subtract(Duration(days: 6 - index));
 
               return Tooltip(
-                message: 'NPR ${value.toStringAsFixed(0)} on ${DateFormat('MMM d').format(date)}',
+                message: 'NPR ${value.toStringAsFixed(0)} on ${NepaliDateFormat('MMM d').format(date)}',
                 triggerMode: TooltipTriggerMode.tap,
                 child: Column(
                   children: [
@@ -1217,7 +1237,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      DateFormat('d').format(date),
+                      NepaliDateFormat('d').format(date),
                       style: TextStyle(
                         color: isTop ? Colors.white70 : const Color(0x44FFFFFF),
                         fontSize: 11,
@@ -1234,20 +1254,18 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
     );
   }
 
-  Widget _buildCalendar(BuildContext context, DateTime date) {
-    final firstDayOfMonth = DateTime(date.year, date.month, 1);
-    final lastDayOfMonth = DateTime(date.year, date.month + 1, 0);
-    final daysInMonth = lastDayOfMonth.day;
-    final startWeekday = firstDayOfMonth.weekday; // 1 (Mon) to 7 (Sun)
+  Widget _buildCalendar(BuildContext context, NepaliDateTime date) {
+    final daysInMonth = _dateService.getDaysInMonth(date.year, date.month);
+    final startWeekday = _dateService.getStartWeekday(date.year, date.month); // 1 (Sun) to 7 (Sat)
 
     // Set of dates with spending
     final spentDates = _items
-        .where((item) => item.date.month == date.month && item.date.year == date.year)
-        .map((item) => item.date.day)
+        .where((item) => _dateService.isSameBSMonth(item.date, date))
+        .map((item) => _dateService.convertADToBS(item.date).day)
         .toSet();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF141F18),
         borderRadius: BorderRadius.circular(24),
@@ -1260,7 +1278,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                DateFormat('MMMM yyyy').format(date).toUpperCase(),
+                _dateService.formatBSMonthYear(date).toUpperCase(),
                 style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1),
               ),
               Row(
@@ -1268,7 +1286,13 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                   IconButton(
                     onPressed: () {
                       setState(() {
-                        _viewingMonth = DateTime(_viewingMonth.year, _viewingMonth.month - 1);
+                        int year = _viewingMonth.year;
+                        int month = _viewingMonth.month - 1;
+                        if (month < 1) {
+                          year--;
+                          month = 12;
+                        }
+                        _viewingMonth = NepaliDateTime(year, month);
                       });
                     },
                     icon: const Icon(Icons.chevron_left, color: Color(0xFF4AB878), size: 20),
@@ -1278,16 +1302,16 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                   const SizedBox(width: 12),
                   IconButton(
                     onPressed: () async {
-                      final picked = await showDatePicker(
+                      final picked = await showNepaliDatePicker(
                         context: context,
                         initialDate: date,
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime.now(),
+                        firstDate: NepaliDateTime(2000),
+                        lastDate: NepaliDateTime.now(),
                         initialDatePickerMode: DatePickerMode.year,
                       );
                       if (picked != null) {
                         setState(() {
-                          _viewingMonth = DateTime(picked.year, picked.month);
+                          _viewingMonth = NepaliDateTime(picked.year, picked.month);
                         });
                       }
                     },
@@ -1299,7 +1323,13 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                   IconButton(
                     onPressed: () {
                       setState(() {
-                        _viewingMonth = DateTime(_viewingMonth.year, _viewingMonth.month + 1);
+                        int year = _viewingMonth.year;
+                        int month = _viewingMonth.month + 1;
+                        if (month > 12) {
+                          year++;
+                          month = 1;
+                        }
+                        _viewingMonth = NepaliDateTime(year, month);
                       });
                     },
                     icon: const Icon(Icons.chevron_right, color: Color(0xFF4AB878), size: 20),
@@ -1310,58 +1340,58 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-                .map((d) => SizedBox(width: 24, child: Center(child: Text(d, style: const TextStyle(color: Color(0x44FFFFFF), fontSize: 10, fontWeight: FontWeight.w700)))))
+            children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+                .map((d) => SizedBox(width: 20, child: Center(child: Text(d, style: const TextStyle(color: Color(0x44FFFFFF), fontSize: 9, fontWeight: FontWeight.w700)))) )
                 .toList(),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: (startWeekday - 1) + daysInMonth,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, mainAxisSpacing: 4, crossAxisSpacing: 4),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
+            ),
             itemBuilder: (context, index) {
               final dayNumber = index - (startWeekday - 1) + 1;
-              if (dayNumber < 1) return const SizedBox.shrink();
+              if (dayNumber < 1 || dayNumber > daysInMonth) return const SizedBox.shrink();
 
               final hasSpent = spentDates.contains(dayNumber);
-              final isToday = dayNumber == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
+              final now = NepaliDateTime.now();
+              final isToday = dayNumber == now.day && date.month == now.month && date.year == now.year;
 
-              return Center(
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: isToday ? Border.all(color: const Color(0xFF4AB878), width: 1.5) : null,
-                  ),
-                  child: Center(
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        if (hasSpent)
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.red, width: 1.5),
-                            ),
-                          ),
-                        Text(
-                          '$dayNumber',
-                          style: TextStyle(
-                            color: isToday ? const Color(0xFF4AB878) : Colors.white,
-                            fontSize: 10,
-                            fontWeight: isToday || hasSpent ? FontWeight.w800 : FontWeight.w500,
-                          ),
+              return Container(
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: isToday ? Border.all(color: const Color(0xFF4AB878), width: 1.2) : null,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (hasSpent)
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.red, width: 1.2),
                         ),
-                      ],
+                      ),
+                    Text(
+                      '$dayNumber',
+                      style: TextStyle(
+                        color: isToday ? const Color(0xFF4AB878) : Colors.white,
+                        fontSize: 11,
+                        fontWeight: isToday || hasSpent ? FontWeight.w800 : FontWeight.w500,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               );
             },
@@ -1427,7 +1457,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             child: Text(
               largestItem == null
                   ? 'Add items to start tracking your biggest spend days.'
-                  : 'Biggest purchase: ${largestItem.name} for NPR ${largestItem.total.toStringAsFixed(0)} on ${DateFormat.yMMMd().format(largestItem.date)}.',
+                  : 'Biggest purchase: ${largestItem.name} for NPR ${largestItem.total.toStringAsFixed(0)} on ${_dateService.formatBSDateLong(largestItem.date)}.',
               style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12, height: 1.5),
             ),
           ),
@@ -1515,7 +1545,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
               children: [
                 Text(item.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 3),
-                Text('${item.quantity} ${item.unit} · ${DateFormat.yMMMd().format(item.date)}', style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
+                Text('${item.quantity} ${item.unit} · ${_dateService.formatBSMonthDay(item.date)}, ${_dateService.convertADToBS(item.date).year}', style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
               ],
             ),
           ),
@@ -1544,7 +1574,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
               children: [
                 Text(item.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 3),
-                Text('${item.quantity} ${item.unit} · ${DateFormat.yMMMd().format(item.date)}', style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
+                Text('${item.quantity} ${item.unit} · ${_dateService.formatBSDateShort(item.date)}', style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
               ],
             ),
           ),
@@ -1565,7 +1595,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(DateFormat.yMMMd().format(item.date), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(_dateService.formatBSDateLong(item.date), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               Text(item.name, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
             ],
@@ -1608,7 +1638,7 @@ class _AddItemSheetState extends State<AddItemSheet> {
   final _nameCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
   double _qty = 1.0;
-  DateTime _selectedDate = DateTime.now();
+  NepaliDateTime _selectedDate = NepaliDateTime.now();
 
   @override
   void dispose() {
@@ -1620,11 +1650,11 @@ class _AddItemSheetState extends State<AddItemSheet> {
   double get _total => (double.tryParse(_priceCtrl.text) ?? 0.0) * _qty;
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    final picked = await showNepaliDatePicker(
       context: context,
       initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      firstDate: NepaliDateTime(2000),
+      lastDate: NepaliDateTime.now(),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -1741,7 +1771,7 @@ class _AddItemSheetState extends State<AddItemSheet> {
                             children: [
                               const Icon(Icons.calendar_today, color: Color(0xFF4AB878), size: 18),
                               const SizedBox(width: 12),
-                              Text(DateFormat('MMM d, yyyy').format(_selectedDate), style: const TextStyle(color: Colors.white, fontSize: 14)),
+                              Text(NepaliDateFormat('MMM d, yyyy').format(_selectedDate), style: const TextStyle(color: Colors.white, fontSize: 14)),
                             ],
                           ),
                         ),
@@ -1774,7 +1804,7 @@ class _AddItemSheetState extends State<AddItemSheet> {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter name and valid price')));
                     return;
                   }
-                  Navigator.of(context).pop({'name': name, 'price': price, 'qty': _qty, 'date': _selectedDate});
+                  Navigator.of(context).pop({'name': name, 'price': price, 'qty': _qty, 'date': _selectedDate.toDateTime()});
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4AB878),

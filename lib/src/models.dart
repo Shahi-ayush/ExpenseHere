@@ -1,4 +1,6 @@
 
+import 'package:nepali_utils/nepali_utils.dart';
+
 // ignore_for_file: unused_import
 
 class GroceryItem {
@@ -23,6 +25,8 @@ class GroceryItem {
   final String? imagePath;
 
   double get total => price * quantity;
+
+  NepaliDateTime get nepaliDate => date.toNepaliDateTime();
 
   factory GroceryItem.fromJson(Map<String, dynamic> json) {
     DateTime parsedDate;
