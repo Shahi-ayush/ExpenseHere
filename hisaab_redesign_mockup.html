@@ -1,0 +1,265 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,-apple-system,sans-serif)}
+.phone{width:360px;min-height:720px;background:#0E1A13;border-radius:36px;overflow:hidden;margin:0 auto;border:1.5px solid #2A3D30;position:relative}
+.statusbar{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:#0E1A13}
+.statusbar span{color:#ffffff88;font-size:11px;font-weight:500}
+.statusbar .time{color:#fff;font-size:13px;font-weight:600}
+
+.hero{background:linear-gradient(145deg,#1A3528 0%,#143020 60%,#0D2318 100%);padding:20px 20px 24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:rgba(74,184,120,0.06)}
+.hero::after{content:'';position:absolute;right:10px;bottom:-20px;width:100px;height:100px;border-radius:50%;background:rgba(74,184,120,0.04)}
+.hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.logo-pill{background:rgba(74,184,120,0.15);border:1px solid rgba(74,184,120,0.25);border-radius:999px;padding:6px 14px;display:flex;align-items:center;gap:7px}
+.logo-pill span{color:#4AB878;font-size:13px;font-weight:700;letter-spacing:1.5px}
+.date-pill{background:rgba(255,255,255,0.07);border-radius:999px;padding:5px 12px}
+.date-pill span{color:#ffffff88;font-size:11px;font-weight:500}
+.hero-amount{margin-bottom:6px}
+.hero-amount .label{color:#ffffff55;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.hero-amount .amount{color:#fff;font-size:38px;font-weight:700;letter-spacing:-1px;line-height:1}
+.hero-amount .currency{font-size:18px;color:#4AB878;font-weight:600;vertical-align:super;margin-right:4px}
+.hero-sub{color:#ffffff66;font-size:12px;margin-top:8px}
+.hero-sub b{color:#4AB87888}
+
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.stat-card{background:#141F18;border-radius:16px;padding:14px 16px;border:1px solid #1E3025}
+.stat-card .s-label{color:#ffffff44;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px}
+.stat-card .s-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:14px}
+.stat-card.green .s-icon{background:rgba(74,184,120,0.15);color:#4AB878}
+.stat-card.amber .s-icon{background:rgba(240,159,39,0.15);color:#EF9F27}
+.stat-card .s-val{color:#fff;font-size:18px;font-weight:700;line-height:1.1}
+
+.section-head{padding:16px 16px 8px;display:flex;align-items:center;justify-content:space-between}
+.section-head .sh-title{color:#fff;font-size:15px;font-weight:700}
+.section-head .sh-link{color:#4AB878;font-size:12px;font-weight:600}
+
+.items-list{padding:0 16px}
+.item-row{background:#141F18;border-radius:16px;padding:14px;margin-bottom:10px;border:1px solid #1E3025;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background 0.15s}
+.item-row:active{background:#1a2a20}
+.item-icon{width:42px;height:42px;border-radius:12px;background:#1A2E22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid #243A2C}
+.item-info{flex:1;min-width:0}
+.item-name{color:#fff;font-size:14px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-meta{color:#ffffff44;font-size:11px}
+.item-price{color:#4AB878;font-size:15px;font-weight:700;flex-shrink:0}
+
+.chart-card{margin:0 16px 12px;background:#141F18;border-radius:18px;padding:16px;border:1px solid #1E3025}
+.chart-title{color:#ffffff88;font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:14px}
+.bars{display:flex;align-items:flex-end;gap:6px;height:70px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar{width:100%;border-radius:6px 6px 0 0;transition:height 0.3s}
+.bar.active{background:linear-gradient(180deg,#4AB878,#2D7A50)}
+.bar.muted{background:#1E3025}
+.bar-label{color:#ffffff33;font-size:9px;font-weight:600}
+
+.insight-row{margin:0 16px 14px;background:linear-gradient(135deg,#172B1F,#1A3525);border-radius:18px;padding:14px 16px;border:1px solid #243A2C;display:flex;align-items:center;gap:12px}
+.insight-icon{width:38px;height:38px;border-radius:12px;background:rgba(74,184,120,0.15);display:flex;align-items:center;justify-content:center;color:#4AB878;font-size:18px;flex-shrink:0}
+.insight-text{color:#ffffff88;font-size:12px;line-height:1.5}
+.insight-text b{color:#4AB878}
+
+.navbar{height:72px;background:#0A1610;border-top:1px solid #1E3025;display:flex;align-items:center;padding:0 8px;position:relative}
+.nav-items{flex:1;display:flex}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer}
+.nav-item i{font-size:19px;color:#ffffff33}
+.nav-item.active i{color:#4AB878}
+.nav-item span{font-size:9px;font-weight:600;color:#ffffff33;letter-spacing:0.3px}
+.nav-item.active span{color:#4AB878}
+.nav-gap{width:64px;flex-shrink:0}
+.fab{position:absolute;left:50%;transform:translateX(-50%);top:-22px;width:52px;height:52px;border-radius:50%;background:#4AB878;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px #0A1610;cursor:pointer}
+.fab i{color:#0E1A13;font-size:22px;font-weight:700}
+
+.tab-content{display:none}
+.tab-content.active{display:block}
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+
+<div style="padding:1rem 0">
+<div class="phone">
+  <div class="statusbar">
+    <span class="time">9:41</span>
+    <span style="display:flex;align-items:center;gap:6px">
+      <i class="ti ti-wifi" style="color:#fff;font-size:13px"></i>
+      <i class="ti ti-battery-2" style="color:#fff;font-size:13px"></i>
+    </span>
+  </div>
+
+  <div id="tab-home" class="tab-content active">
+    <div class="hero">
+      <div class="hero-top">
+        <div class="logo-pill"><span>HISAAB</span></div>
+        <div class="date-pill"><span>Sun, May 25</span></div>
+      </div>
+      <div class="hero-amount">
+        <div class="label">Total tracked</div>
+        <div class="amount"><span class="currency">NPR</span>14,820<span style="font-size:20px;color:#ffffff66">.50</span></div>
+      </div>
+      <div class="hero-sub">32 purchases · <b>8 shopping days</b> this month</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card green">
+        <div class="s-icon"><i class="ti ti-shopping-cart"></i></div>
+        <div class="s-label">Avg basket</div>
+        <div class="s-val">NPR 463</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="s-icon"><i class="ti ti-box"></i></div>
+        <div class="s-label">Total units</div>
+        <div class="s-val">148 pcs</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">Daily spend — May</div>
+      <div class="bars">
+        <div class="bar-wrap"><div class="bar muted" style="height:20px"></div><div class="bar-label">3</div></div>
+        <div class="bar-wrap"><div class="bar muted" style="height:35px"></div><div class="bar-label">7</div></div>
+        <div class="bar-wrap"><div class="bar muted" style="height:28px"></div><div class="bar-label">10</div></div>
+        <div class="bar-wrap"><div class="bar active" style="height:55px"></div><div class="bar-label">14</div></div>
+        <div class="bar-wrap"><div class="bar muted" style="height:18px"></div><div class="bar-label">17</div></div>
+        <div class="bar-wrap"><div class="bar muted" style="height:42px"></div><div class="bar-label">20</div></div>
+        <div class="bar-wrap"><div class="bar active" style="height:70px"></div><div class="bar-label">23</div></div>
+        <div class="bar-wrap"><div class="bar muted" style="height:30px"></div><div class="bar-label">25</div></div>
+      </div>
+    </div>
+
+    <div class="insight-row">
+      <div class="insight-icon"><i class="ti ti-sparkles"></i></div>
+      <div class="insight-text">Biggest day this month: <b>NPR 3,200</b> on May 23 — mostly dairy &amp; vegetables.</div>
+    </div>
+
+    <div class="section-head">
+      <span class="sh-title">Recent purchases</span>
+      <span class="sh-link">See all →</span>
+    </div>
+
+    <div class="items-list" style="padding-bottom:16px">
+      <div class="item-row">
+        <div class="item-icon">🥛</div>
+        <div class="item-info">
+          <div class="item-name">Full Cream Milk</div>
+          <div class="item-meta">2 liter · May 25</div>
+        </div>
+        <div class="item-price">NPR 280</div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">🛢️</div>
+        <div class="item-info">
+          <div class="item-name">Mustard Oil</div>
+          <div class="item-meta">1 liter · May 24</div>
+        </div>
+        <div class="item-price">NPR 350</div>
+      </div>
+      <div class="item-row">
+        <div class="item-icon">🍅</div>
+        <div class="item-info">
+          <div class="item-name">Tomatoes</div>
+          <div class="item-meta">1.5 kg · May 23</div>
+        </div>
+        <div class="item-price">NPR 90</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-items" class="tab-content">
+    <div class="section-head" style="padding-top:20px">
+      <span class="sh-title">All items</span>
+      <span style="background:#1E3025;border-radius:999px;padding:4px 12px;color:#4AB878;font-size:11px;font-weight:700">32 saved</span>
+    </div>
+    <div class="items-list" style="padding-bottom:16px">
+      <div class="item-row"><div class="item-icon">🥛</div><div class="item-info"><div class="item-name">Full Cream Milk</div><div class="item-meta">2 liter · NPR 140/L · May 25</div></div><div class="item-price">NPR 280</div></div>
+      <div class="item-row"><div class="item-icon">🛢️</div><div class="item-info"><div class="item-name">Mustard Oil</div><div class="item-meta">1 liter · NPR 350/L · May 24</div></div><div class="item-price">NPR 350</div></div>
+      <div class="item-row"><div class="item-icon">🍅</div><div class="item-info"><div class="item-name">Tomatoes</div><div class="item-meta">1.5 kg · NPR 60/kg · May 23</div></div><div class="item-price">NPR 90</div></div>
+      <div class="item-row"><div class="item-icon">🧅</div><div class="item-info"><div class="item-name">Onions</div><div class="item-meta">2 kg · NPR 55/kg · May 23</div></div><div class="item-price">NPR 110</div></div>
+      <div class="item-row"><div class="item-icon">🌾</div><div class="item-info"><div class="item-name">Basmati Rice</div><div class="item-meta">5 kg · NPR 180/kg · May 20</div></div><div class="item-price">NPR 900</div></div>
+    </div>
+  </div>
+
+  <div id="tab-reports" class="tab-content">
+    <div class="section-head" style="padding-top:20px">
+      <span class="sh-title">Reports</span>
+    </div>
+    <div style="padding:0 16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none">
+      <div style="background:#4AB878;border-radius:999px;padding:6px 14px;white-space:nowrap"><span style="color:#0E1A13;font-size:12px;font-weight:700">May 2025</span></div>
+      <div style="background:#1E3025;border-radius:999px;padding:6px 14px;white-space:nowrap"><span style="color:#ffffff66;font-size:12px;font-weight:600">Apr 2025</span></div>
+      <div style="background:#1E3025;border-radius:999px;padding:6px 14px;white-space:nowrap"><span style="color:#ffffff66;font-size:12px;font-weight:600">Mar 2025</span></div>
+    </div>
+    <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="stat-card green"><div class="s-label">Month total</div><div class="s-val" style="font-size:16px">NPR 14,820</div></div>
+      <div class="stat-card amber"><div class="s-label">Purchases</div><div class="s-val">32</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Spend by week</div>
+      <div class="bars" style="gap:10px">
+        <div class="bar-wrap"><div class="bar muted" style="height:40px;background:#1E3025"></div><div class="bar-label">Wk1</div></div>
+        <div class="bar-wrap"><div class="bar active" style="height:65px"></div><div class="bar-label">Wk2</div></div>
+        <div class="bar-wrap"><div class="bar muted" style="height:30px;background:#1E3025"></div><div class="bar-label">Wk3</div></div>
+        <div class="bar-wrap"><div class="bar active" style="height:50px"></div><div class="bar-label">Wk4</div></div>
+      </div>
+    </div>
+    <div style="margin:0 16px 12px;background:#141F18;border-radius:16px;border:1px solid #1E3025;overflow:hidden">
+      <div style="padding:14px 16px;border-bottom:1px solid #1E3025;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="color:#fff;font-size:13px;font-weight:600">May 23</div><div style="color:#ffffff44;font-size:11px">5 items</div></div>
+        <div style="color:#4AB878;font-size:15px;font-weight:700">NPR 3,200</div>
+      </div>
+      <div style="padding:14px 16px;border-bottom:1px solid #1E3025;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="color:#fff;font-size:13px;font-weight:600">May 20</div><div style="color:#ffffff44;font-size:11px">3 items</div></div>
+        <div style="color:#4AB878;font-size:15px;font-weight:700">NPR 1,850</div>
+      </div>
+      <div style="padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+        <div><div style="color:#fff;font-size:13px;font-weight:600">May 14</div><div style="color:#ffffff44;font-size:11px">4 items</div></div>
+        <div style="color:#4AB878;font-size:15px;font-weight:700">NPR 2,100</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-account" class="tab-content">
+    <div style="margin:16px 16px 12px;background:linear-gradient(135deg,#172B1F,#1A3525);border-radius:22px;padding:20px;border:1px solid #243A2C">
+      <div style="width:52px;height:52px;border-radius:16px;background:rgba(74,184,120,0.15);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><i class="ti ti-user" style="color:#4AB878;font-size:24px"></i></div>
+      <div style="color:#fff;font-size:22px;font-weight:700;letter-spacing:1px;margin-bottom:4px">HISAAB</div>
+      <div style="color:#ffffff66;font-size:12px;line-height:1.6">NPR 14,820.50 tracked across 32 purchases. Your personal grocery ledger.</div>
+    </div>
+    <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div class="stat-card green"><div class="s-icon"><i class="ti ti-receipt"></i></div><div class="s-label">Purchases</div><div class="s-val">32</div></div>
+      <div class="stat-card amber"><div class="s-icon"><i class="ti ti-wallet"></i></div><div class="s-label">Avg basket</div><div class="s-val">NPR 463</div></div>
+    </div>
+    <div style="margin:0 16px;background:#141F18;border-radius:18px;border:1px solid #1E3025;overflow:hidden">
+      <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #1E3025">
+        <div style="width:34px;height:34px;border-radius:10px;background:#1A2E22;display:flex;align-items:center;justify-content:center"><i class="ti ti-photo" style="color:#4AB878;font-size:16px"></i></div>
+        <span style="color:#ffffff88;font-size:13px">Attach photos to track brands or receipts</span>
+      </div>
+      <div style="padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #1E3025">
+        <div style="width:34px;height:34px;border-radius:10px;background:#1A2E22;display:flex;align-items:center;justify-content:center"><i class="ti ti-calendar" style="color:#4AB878;font-size:16px"></i></div>
+        <span style="color:#ffffff88;font-size:13px">Browse month-by-month from Reports</span>
+      </div>
+      <div style="padding:14px 16px;display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;border-radius:10px;background:#1A2E22;display:flex;align-items:center;justify-content:center"><i class="ti ti-chart-bar" style="color:#4AB878;font-size:16px"></i></div>
+        <span style="color:#ffffff88;font-size:13px">Spot spending patterns at a glance</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar">
+    <div class="nav-items">
+      <div class="nav-item active" onclick="switchTab(0,this)"><i class="ti ti-home"></i><span>Home</span></div>
+      <div class="nav-item" onclick="switchTab(1,this)"><i class="ti ti-list"></i><span>Items</span></div>
+    </div>
+    <div class="nav-gap"></div>
+    <div class="fab"><i class="ti ti-plus"></i></div>
+    <div class="nav-items">
+      <div class="nav-item" onclick="switchTab(2,this)"><i class="ti ti-chart-bar"></i><span>Reports</span></div>
+      <div class="nav-item" onclick="switchTab(3,this)"><i class="ti ti-user"></i><span>Account</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const tabs=['home','items','reports','account'];
+function switchTab(i,el){
+  tabs.forEach((t,j)=>{
+    document.getElementById('tab-'+t).classList.toggle('active',j===i);
+  });
+  document.querySelectorAll('.nav-item').forEach((n,j)=>n.classList.toggle('active',j===i));
+}
+</script>
