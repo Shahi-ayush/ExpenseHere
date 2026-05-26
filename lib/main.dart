@@ -13,6 +13,8 @@ void main() {
   runApp(const GroceryTrackerApp());
 }
 
+final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
+
 class GroceryTrackerApp extends StatelessWidget {
   const GroceryTrackerApp({super.key});
 
@@ -21,9 +23,19 @@ class GroceryTrackerApp extends StatelessWidget {
     const primary = Color(0xFF4AB878);
     const accent = Color(0xFFEF9F27);
 
-    final theme = ThemeData(
+    final darkTheme = ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: primary, primary: primary, secondary: accent),
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: Brightness.dark,
+        primary: primary,
+        secondary: accent,
+        surface: const Color(0xFF141F18),
+        onSurface: Colors.white,
+        onSurfaceVariant: const Color(0xFFB8C2AA),
+        outline: const Color(0xFF243A2C),
+      ),
       scaffoldBackgroundColor: const Color(0xFF0E1610),
       appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF0E1610), elevation: 0),
       inputDecorationTheme: const InputDecorationTheme(
@@ -33,11 +45,40 @@ class GroceryTrackerApp extends StatelessWidget {
       ),
     );
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'HISAAB',
-      theme: theme,
-      home: const AuthGate(),
+    final lightTheme = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: Brightness.light,
+        primary: primary,
+        secondary: accent,
+        surface: Colors.white,
+        onSurface: const Color(0xFF0E1610),
+        onSurfaceVariant: const Color(0xFF5F6368),
+        outline: const Color(0xFFE0E5E2),
+      ),
+      scaffoldBackgroundColor: const Color(0xFFF8FAF9),
+      appBarTheme: const AppBarTheme(backgroundColor: Color(0xFFF8FAF9), elevation: 0, foregroundColor: Color(0xFF0E1610)),
+      inputDecorationTheme: const InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderSide: BorderSide(color: Color(0xFFE0E5E2)), borderRadius: BorderRadius.all(Radius.circular(12))),
+      ),
+    );
+
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'HISAAB',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: currentMode,
+          home: const AuthGate(),
+        );
+      },
     );
   }
 }
@@ -197,14 +238,22 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0E1610), Color(0xFF141F18), Color(0xFF0D2318)],
-          ),
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF0E1610), Color(0xFF141F18), Color(0xFF0D2318)],
+                )
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [const Color(0xFFF8FAF9), Colors.white, const Color(0xFFE8F5E9)],
+                ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -227,8 +276,8 @@ class _SignInPageState extends State<SignInPage> {
                   const SizedBox(height: 32),
                   Text(
                     _isSignUp ? 'Create Account' : 'Welcome Back',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -1,
@@ -237,8 +286,8 @@ class _SignInPageState extends State<SignInPage> {
                   const SizedBox(height: 8),
                   Text(
                     _isSignUp ? 'Start tracking your grocery expenses' : 'Sign in to continue to HISAAB',
-                    style: const TextStyle(
-                      color: Color(0x99FFFFFF),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -248,23 +297,23 @@ class _SignInPageState extends State<SignInPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Full Name', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text('Full Name', style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
                         TextField(
                           controller: _nameCtrl,
                           enabled: !_loading,
-                          style: const TextStyle(color: Colors.white),
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: InputDecoration(
                             hintText: 'Your Name',
-                            hintStyle: const TextStyle(color: Color(0x55FFFFFF)),
+                            hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withAlpha(100)),
                             filled: true,
-                            fillColor: const Color(0xFF141F18),
+                            fillColor: theme.colorScheme.surface,
                             border: OutlineInputBorder(
-                              borderSide: BorderSide(color: _nameError != null ? Colors.red : const Color(0xFF243A2C), width: 1.5),
+                              borderSide: BorderSide(color: _nameError != null ? Colors.red : theme.colorScheme.outline, width: 1.5),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: _nameError != null ? Colors.red : const Color(0xFF243A2C), width: 1.5),
+                              borderSide: BorderSide(color: _nameError != null ? Colors.red : theme.colorScheme.outline, width: 1.5),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             focusedBorder: OutlineInputBorder(
@@ -285,24 +334,24 @@ class _SignInPageState extends State<SignInPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Email Address', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text('Email Address', style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _emailCtrl,
                         enabled: !_loading,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: theme.colorScheme.onSurface),
                         decoration: InputDecoration(
                           hintText: 'Enter your email address',
-                          hintStyle: const TextStyle(color: Color(0x55FFFFFF)),
+                          hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withAlpha(100)),
                           filled: true,
-                          fillColor: const Color(0xFF141F18),
+                          fillColor: theme.colorScheme.surface,
                           border: OutlineInputBorder(
-                            borderSide: BorderSide(color: _emailError != null ? Colors.red : const Color(0xFF243A2C), width: 1.5),
+                            borderSide: BorderSide(color: _emailError != null ? Colors.red : theme.colorScheme.outline, width: 1.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: _emailError != null ? Colors.red : const Color(0xFF243A2C), width: 1.5),
+                            borderSide: BorderSide(color: _emailError != null ? Colors.red : theme.colorScheme.outline, width: 1.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -322,24 +371,24 @@ class _SignInPageState extends State<SignInPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Password', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text('Password', style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _passCtrl,
                         enabled: !_loading,
                         obscureText: !_showPassword,
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: theme.colorScheme.onSurface),
                         decoration: InputDecoration(
                           hintText: _isSignUp ? 'At least 6 characters' : 'Enter your password',
-                          hintStyle: const TextStyle(color: Color(0x55FFFFFF)),
+                          hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant.withAlpha(100)),
                           filled: true,
-                          fillColor: const Color(0xFF141F18),
+                          fillColor: theme.colorScheme.surface,
                           border: OutlineInputBorder(
-                            borderSide: BorderSide(color: _passwordError != null ? Colors.red : const Color(0xFF243A2C), width: 1.5),
+                            borderSide: BorderSide(color: _passwordError != null ? Colors.red : theme.colorScheme.outline, width: 1.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: _passwordError != null ? Colors.red : const Color(0xFF243A2C), width: 1.5),
+                            borderSide: BorderSide(color: _passwordError != null ? Colors.red : theme.colorScheme.outline, width: 1.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -348,7 +397,7 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           suffixIcon: IconButton(
-                            icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: const Color(0x77FFFFFF)),
+                            icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off, color: theme.colorScheme.onSurfaceVariant),
                             onPressed: () => setState(() => _showPassword = !_showPassword),
                           ),
                         ),
@@ -371,10 +420,10 @@ class _SignInPageState extends State<SignInPage> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: _loading
-                          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0E1610))))
+                          ? SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(isDark ? const Color(0xFF0E1610) : Colors.white)))
                           : Text(
                               _isSignUp ? 'Create Account' : 'Sign In',
-                              style: const TextStyle(color: Color(0xFF0E1610), fontSize: 16, fontWeight: FontWeight.w700),
+                              style: TextStyle(color: isDark ? const Color(0xFF0E1610) : Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                             ),
                     ),
                   ),
@@ -384,7 +433,7 @@ class _SignInPageState extends State<SignInPage> {
                     child: OutlinedButton(
                       onPressed: _loading ? null : () => setState(() => _isSignUp = !_isSignUp),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF243A2C), width: 1.5),
+                        side: BorderSide(color: theme.colorScheme.outline, width: 1.5),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -398,9 +447,9 @@ class _SignInPageState extends State<SignInPage> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF172B1F),
+                      color: isDark ? const Color(0xFF172B1F) : const Color(0xFFF0F4F2),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF243A2C)),
+                      border: Border.all(color: theme.colorScheme.outline.withAlpha(50)),
                     ),
                     child: Row(
                       children: [
@@ -411,10 +460,10 @@ class _SignInPageState extends State<SignInPage> {
                           child: const Center(child: Icon(Icons.shield, color: Color(0xFF4AB878), size: 16)),
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Your data is secure and encrypted. No third-party services.',
-                            style: TextStyle(color: Color(0xFFB8C2AA), fontSize: 12, height: 1.4),
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12, height: 1.4),
                           ),
                         ),
                       ],
@@ -547,6 +596,28 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
     }
   }
 
+  Future<void> _deleteItem(GroceryItem item) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Purchase?'),
+        content: Text('Are you sure you want to delete "${item.name}"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _storage.deleteItem(item.id);
+      await _load();
+    }
+  }
+
   Future<void> _signOut() async {
     await AuthService().signOut();
     widget.onSignedOut();
@@ -558,8 +629,183 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
     });
   }
 
+  double _getMonthTotal(NepaliDateTime month) {
+    return _items
+        .where((item) => _dateService.isSameBSMonth(item.date, month))
+        .fold(0.0, (sum, item) => sum + item.total);
+  }
+
+  void _showComparison() async {
+    final picked = await showNepaliDatePicker(
+      context: context,
+      initialDate: _viewingMonth,
+      firstDate: NepaliDateTime(2000),
+      lastDate: NepaliDateTime.now(),
+      initialDatePickerMode: DatePickerMode.year,
+    );
+
+    if (picked != null && mounted) {
+      final compareMonth = NepaliDateTime(picked.year, picked.month);
+      final m1Total = _getMonthTotal(_viewingMonth);
+      final m2Total = _getMonthTotal(compareMonth);
+
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => _buildComparisonSheet(context, _viewingMonth, compareMonth, m1Total, m2Total),
+      );
+    }
+  }
+
+  Widget _buildComparisonSheet(BuildContext context, NepaliDateTime m1, NepaliDateTime m2, double t1, double m2Total) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final diff = (t1 - m2Total).abs();
+    final isM1Higher = t1 > m2Total;
+    final percent = m2Total == 0 ? (t1 > 0 ? 100.0 : 0.0) : (diff / m2Total) * 100;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0E1610) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2), borderRadius: BorderRadius.circular(2)),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text('Spend Comparison', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_dateService.formatBSMonthYear(m1).toUpperCase(), style: TextStyle(color: const Color(0xFF4AB878), fontWeight: FontWeight.w700, fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Text('NPR ${t1.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.compare_arrows, color: Colors.white24),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(_dateService.formatBSMonthYear(m2).toUpperCase(), style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.w700, fontSize: 12)),
+                    const SizedBox(height: 4),
+                    Text('NPR ${m2Total.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: isM1Higher ? Colors.red.withAlpha(20) : const Color(0xFF4AB878).withAlpha(20),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: (isM1Higher ? Colors.red : const Color(0xFF4AB878)).withAlpha(50)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  isM1Higher 
+                    ? 'You spent more in ${_dateService.formatBSMonth(m1)}' 
+                    : 'You spent less in ${_dateService.formatBSMonth(m1)}',
+                  style: TextStyle(
+                    color: isM1Higher ? Colors.red : const Color(0xFF4AB878),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Difference: NPR ${diff.toStringAsFixed(0)} (${percent.toStringAsFixed(1)}%)',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+          // Simple horizontal bar chart
+          const Text('Visual Breakdown', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white38)),
+          const SizedBox(height: 16),
+          _buildComparisonBar(context, _dateService.formatBSMonth(m1), t1, t1 > m2Total ? t1 : m2Total, const Color(0xFF4AB878)),
+          const SizedBox(height: 12),
+          _buildComparisonBar(context, _dateService.formatBSMonth(m2), m2Total, t1 > m2Total ? t1 : m2Total, Theme.of(context).colorScheme.secondary),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isDark ? const Color(0xFF1E3025) : const Color(0xFFF0F4F2),
+                foregroundColor: const Color(0xFF4AB878),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Close'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonBar(BuildContext context, String label, double value, double maxValue, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text('NPR ${value.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          ],
+        ),
+        const SizedBox(height: 6),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final maxWidth = constraints.maxWidth;
+            final barWidth = maxValue == 0 ? 0.0 : (value / maxValue) * maxWidth;
+            return Container(
+              height: 12,
+              width: maxWidth,
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(5),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: barWidth,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ),
+            );
+          }
+        )
+      ],
+    );
+  }
+
   Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
     final isSelected = _selectedIndex == index;
+    final theme = Theme.of(context);
     return Expanded(
       child: InkWell(
         onTap: () => _onTabSelected(index),
@@ -569,14 +815,14 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected ? const Color(0xFF4AB878) : Colors.white38,
+              color: isSelected ? const Color(0xFF4AB878) : theme.colorScheme.onSurfaceVariant.withAlpha(100),
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF4AB878) : Colors.white38,
+                color: isSelected ? const Color(0xFF4AB878) : theme.colorScheme.onSurfaceVariant.withAlpha(100),
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -609,16 +855,19 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
               ),
             ),
       floatingActionButton: FloatingActionButton(
+        elevation: 0,
         shape: const CircleBorder(),
         backgroundColor: const Color(0xFF4AB878),
         onPressed: _addItem,
-        child: const Icon(Icons.add, color: Color(0xFF0E1610), size: 30),
+        child: Icon(Icons.add, color: themeNotifier.value == ThemeMode.dark ? const Color(0xFF0E1610) : Colors.white, size: 30),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         height: 65,
-        color: const Color(0xFF0E1610),
+        elevation: 10,
+        shadowColor: Colors.black,
+        color: Theme.of(context).colorScheme.surface,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8,
         child: Row(
@@ -633,6 +882,23 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
         ),
       ),
     );
+  }
+
+  double get _todaySpent {
+    final now = NepaliDateTime.now();
+    return _items
+        .where((item) {
+          final ni = item.date.toNepaliDateTime();
+          return ni.year == now.year && ni.month == now.month && ni.day == now.day;
+        })
+        .fold(0.0, (sum, item) => sum + item.total);
+  }
+
+  int get _thisMonthTotalItems {
+    final now = NepaliDateTime.now();
+    return _items
+        .where((item) => _dateService.isSameBSMonth(item.date, now))
+        .length;
   }
 
   Widget _buildDashboardTab(BuildContext context) {
@@ -660,8 +926,8 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     children: [
                       Text(
                         '$greeting, $firstName',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
@@ -670,8 +936,8 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                       const SizedBox(height: 4),
                       Text(
                         'Spend overview — ${_dateService.formatBSMonthYear(NepaliDateTime.now())}',
-                        style: const TextStyle(
-                          color: Colors.white38,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -683,9 +949,9 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF142E20),
+                    color: const Color(0xFF4AB878).withAlpha(30),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF1E402C), width: 1.5),
+                    border: Border.all(color: const Color(0xFF4AB878).withAlpha(100), width: 1.5),
                   ),
                   child: const Center(
                     child: Icon(Icons.person_rounded, color: Color(0xFF4AB878), size: 26),
@@ -701,9 +967,9 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Expanded(child: _buildStatCard(context, 'Avg basket', 'NPR ${_thisMonthAvgBasket.toStringAsFixed(0)}', Icons.shopping_cart, const Color(0xFF4AB878))),
+                Expanded(child: _buildStatCard(context, 'Today expense', 'NPR ${_todaySpent.toStringAsFixed(0)}', Icons.payments, const Color(0xFF4AB878))),
                 const SizedBox(width: 12),
-                Expanded(child: _buildStatCard(context, 'Total units', '${_thisMonthUnits.toStringAsFixed(0)} pcs', Icons.inventory_2, const Color(0xFFEF9F27))),
+                Expanded(child: _buildStatCard(context, 'Total items', '${_thisMonthTotalItems} items', Icons.shopping_basket, const Color(0xFFEF9F27))),
               ],
             ),
           ),
@@ -725,6 +991,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   }
 
   Widget _buildItemsTab(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     List<GroceryItem> filteredItems = _items.where((item) {
       final matchesSearch = item.name.toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesMonth = _dateService.isSameBSMonth(item.date, _itemsFilterMonth);
@@ -764,9 +1031,9 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF141F18),
+                  color: isDark ? const Color(0xFF141F18) : Colors.white,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFF243A2C)),
+                  border: Border.all(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -807,15 +1074,26 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           // Search Bar
           TextField(
             onChanged: (v) => setState(() => _searchQuery = v),
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
             decoration: InputDecoration(
               hintText: 'Search items...',
-              hintStyle: const TextStyle(color: Colors.white38),
-              prefixIcon: const Icon(Icons.search, color: Colors.white38, size: 20),
+              hintStyle: TextStyle(color: isDark ? Colors.white38 : Colors.black38),
+              prefixIcon: Icon(Icons.search, color: isDark ? Colors.white38 : Colors.black38, size: 20),
               filled: true,
-              fillColor: const Color(0xFF141F18),
+              fillColor: isDark ? const Color(0xFF141F18) : Colors.white,
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF4AB878), width: 1.5),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -828,7 +1106,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                 const SizedBox(width: 8),
                 _buildFilterChip('Amount', _sortBy == 'amount', () => setState(() => _sortBy = 'amount')),
                 const SizedBox(width: 16),
-                Container(width: 1, height: 20, color: Colors.white10),
+                Container(width: 1, height: 20, color: Theme.of(context).colorScheme.outline.withAlpha(50)),
                 const SizedBox(width: 16),
                 _buildFilterChip(_isAscending ? 'Oldest' : 'Newest', false, () => setState(() => _isAscending = !_isAscending), icon: _isAscending ? Icons.arrow_upward : Icons.arrow_downward),
               ],
@@ -850,22 +1128,23 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   }
 
   Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap, {IconData? icon}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4AB878) : const Color(0xFF141F18),
+          color: isSelected ? const Color(0xFF4AB878) : (isDark ? const Color(0xFF141F18) : Colors.white),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isSelected ? Colors.transparent : const Color(0xFF243A2C)),
+          border: Border.all(color: isSelected ? Colors.transparent : (isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2))),
         ),
         child: Row(
           children: [
-            if (icon != null) ...[Icon(icon, size: 14, color: isSelected ? Colors.black : Colors.white70), const SizedBox(width: 4)],
+            if (icon != null) ...[Icon(icon, size: 14, color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87)), const SizedBox(width: 4)],
             Text(
               label,
-              style: TextStyle(color: isSelected ? Colors.black : Colors.white70, fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+              style: TextStyle(color: isSelected ? Colors.black : (isDark ? Colors.white70 : Colors.black87), fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
             ),
           ],
         ),
@@ -895,7 +1174,21 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildPageHeader('Reports', Icons.bar_chart),
+            child: _buildPageHeader(
+              'Reports', 
+              Icons.bar_chart,
+              trailing: TextButton.icon(
+                onPressed: _showComparison,
+                icon: const Icon(Icons.compare_arrows, size: 18),
+                label: const Text('Compare', style: TextStyle(fontWeight: FontWeight.w700)),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF4AB878),
+                  backgroundColor: const Color(0xFF4AB878).withAlpha(20),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: _buildCalendar(context, _viewingMonth)),
@@ -928,6 +1221,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   }
 
   Widget _buildAccountTab(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -936,9 +1230,11 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF172B1F), Color(0xFF1A3525)]),
+              gradient: isDark
+                  ? const LinearGradient(colors: [Color(0xFF172B1F), Color(0xFF1A3525)])
+                  : LinearGradient(colors: [const Color(0xFF4AB878).withAlpha(40), const Color(0xFF4AB878).withAlpha(10)]),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFF243A2C)),
+              border: Border.all(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2)),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -949,7 +1245,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     Container(
                       width: 52,
                       height: 52,
-                      decoration: BoxDecoration(color: const Color(0x264AB878), borderRadius: BorderRadius.circular(16)),
+                      decoration: BoxDecoration(color: const Color(0xFF4AB878).withAlpha(30), borderRadius: BorderRadius.circular(16)),
                       child: const Center(child: Icon(Icons.person, color: Color(0xFF4AB878), size: 28)),
                     ),
                     const SizedBox(width: 16),
@@ -957,15 +1253,15 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(widget.user.displayName ?? 'User', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700)),
-                          Text(widget.user.email ?? '', style: const TextStyle(color: Color(0xFFB8C2AA), fontSize: 13)),
+                          Text(widget.user.displayName ?? 'User', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 20, fontWeight: FontWeight.w700)),
+                          Text(widget.user.email ?? '', style: TextStyle(color: isDark ? const Color(0xFFB8C2AA) : Colors.black54, fontSize: 13)),
                         ],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                Text('NPR ${_totalSpent.toStringAsFixed(0)} tracked across ${_items.length} purchases. Your personal ledger.', style: const TextStyle(color: Color(0xFFB8C2AA), fontSize: 12, height: 1.6)),
+                Text('NPR ${_totalSpent.toStringAsFixed(0)} tracked across ${_items.length} purchases. Your personal ledger.', style: TextStyle(color: isDark ? const Color(0xFFB8C2AA) : Colors.black87, fontSize: 12, height: 1.6)),
               ],
             ),
           ),
@@ -978,17 +1274,53 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             ],
           ),
           const SizedBox(height: 24),
-          const Text('Security', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+          const Text('Appearance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF1E3025))),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Theme.of(context).colorScheme.outline.withAlpha(50)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(themeNotifier.value == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode, color: const Color(0xFF4AB878)),
+                    const SizedBox(width: 12),
+                    Text(themeNotifier.value == ThemeMode.dark ? 'Dark Mode' : 'Light Mode', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                Switch(
+                  value: themeNotifier.value == ThemeMode.dark,
+                  activeTrackColor: const Color(0xFF4AB878),
+                  onChanged: (v) {
+                    setState(() {
+                      themeNotifier.value = v ? ThemeMode.dark : ThemeMode.light;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text('Security', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF141F18) : Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFE0E5E2)),
+            ),
             child: Column(
               children: [
-                const TextField(
+                TextField(
                   obscureText: true,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                  decoration: const InputDecoration(
                     labelText: 'New Password',
                     hintText: 'Enter new password',
                     prefixIcon: Icon(Icons.lock_outline, size: 20),
@@ -1001,7 +1333,10 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password update feature coming soon')));
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1E3025), foregroundColor: const Color(0xFF4AB878)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isDark ? const Color(0xFF1E3025) : const Color(0xFFF0F4F2),
+                      foregroundColor: const Color(0xFF4AB878),
+                    ),
                     child: const Text('Change Password'),
                   ),
                 ),
@@ -1020,7 +1355,12 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             },
             icon: const Icon(Icons.logout),
             label: const Text('Sign out'),
-            style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(48), backgroundColor: Colors.red.withValues(alpha: 0.1), foregroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              backgroundColor: Colors.red.withValues(alpha: 0.1),
+              foregroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
           ),
           const SizedBox(height: 100),
         ],
@@ -1034,14 +1374,16 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
     final parts = total.toStringAsFixed(2).split('.');
     final integerPart = formatter.format(int.parse(parts[0]));
     final decimalPart = parts[1];
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      // Removed fixed height to allow content to breathe and avoid overflow
       decoration: BoxDecoration(
-        color: const Color(0xFF0D2318),
+        color: isDark ? const Color(0xFF0D2318) : Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFF1E3025)),
+        border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFE0E5E2)),
+        boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 20, offset: const Offset(0, 10))] : [],
       ),
       child: Stack(
         children: [
@@ -1055,7 +1397,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF4AB878).withValues(alpha: 0.12),
+                    const Color(0xFF4AB878).withValues(alpha: isDark ? 0.12 : 0.08),
                     const Color(0xFF4AB878).withValues(alpha: 0),
                   ],
                 ),
@@ -1066,16 +1408,16 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min, // Use min size
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF142E20),
+                        color: const Color(0xFF4AB878).withAlpha(30),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: const Color(0xFF1E402C)),
+                        border: Border.all(color: const Color(0xFF4AB878).withAlpha(100)),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: const Text(
@@ -1085,21 +1427,21 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0x1AFFFFFF),
+                        color: isDark ? const Color(0x1AFFFFFF) : const Color(0x1A000000),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       child: Text(
-                        NepaliDateFormat('EEE, MMM d').format(NepaliDateTime.now()),
-                        style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 11, fontWeight: FontWeight.w600),
+                        '${NepaliDateFormat('EEEE').format(NepaliDateTime.now())}, ${NepaliDateFormat('MMM d').format(NepaliDateTime.now())}',
+                        style: TextStyle(color: isDark ? const Color(0xCCFFFFFF) : const Color(0xCC000000), fontSize: 11, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 28), // Replaced Spacer with fixed gap
-                const Text(
+                const SizedBox(height: 28),
+                Text(
                   'TOTAL TRACKED',
-                  style: TextStyle(color: Color(0x66FFFFFF), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+                  style: TextStyle(color: isDark ? const Color(0x66FFFFFF) : const Color(0x66000000), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -1112,18 +1454,18 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     ),
                     Text(
                       integerPart,
-                      style: const TextStyle(color: Colors.white, fontSize: 52, fontWeight: FontWeight.w700, letterSpacing: -1),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 52, fontWeight: FontWeight.w700, letterSpacing: -1),
                     ),
                     Text(
                       '.$decimalPart',
-                      style: const TextStyle(color: Color(0x66FFFFFF), fontSize: 26, fontWeight: FontWeight.w700),
+                      style: TextStyle(color: isDark ? const Color(0x66FFFFFF) : const Color(0x66000000), fontSize: 26, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20), // Replaced Spacer with fixed gap
+                const SizedBox(height: 20),
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 13, fontWeight: FontWeight.w500),
                     children: [
                       TextSpan(
                         text: '$_shoppingDays shopping days ',
@@ -1142,12 +1484,14 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   }
 
   Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color, {bool small = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.all(small ? 16 : 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF141F18),
+        color: isDark ? const Color(0xFF141F18) : Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF1E3025)),
+        border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFE0E5E2)),
+        boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))] : [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1164,8 +1508,8 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           const SizedBox(height: 14),
           Text(
             title.toUpperCase(),
-            style: const TextStyle(
-              color: Color(0x66FFFFFF),
+            style: TextStyle(
+              color: isDark ? const Color(0x66FFFFFF) : const Color(0x66000000),
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.1,
@@ -1175,7 +1519,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           Text(
             value,
             style: TextStyle(
-              color: Colors.white,
+              color: isDark ? Colors.white : Colors.black,
               fontSize: small ? 18 : 22,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
@@ -1190,20 +1534,22 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
     final data = _weeklySpend;
     final maxValue = data.isEmpty ? 1.0 : data.reduce((a, b) => a > b ? a : b);
     final monthName = NepaliDateFormat('MMMM').format(NepaliDateTime.now()).toUpperCase();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1610),
+        color: isDark ? const Color(0xFF0D1610) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF1E2A22)),
+        border: Border.all(color: isDark ? const Color(0xFF1E2A22) : const Color(0xFFE0E5E2)),
+        boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 15, offset: const Offset(0, 5))] : [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'DAILY SPEND — $monthName',
-            style: const TextStyle(color: Color(0x77FFFFFF), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
+            style: TextStyle(color: isDark ? const Color(0x77FFFFFF) : const Color(0x77000000), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.2),
           ),
           const SizedBox(height: 24),
           Row(
@@ -1231,7 +1577,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                                 colors: [Color(0xFF63D996), Color(0xFF4AB878)],
                               )
                             : null,
-                        color: isTop ? null : const Color(0xFF1A2E22),
+                        color: isTop ? null : (isDark ? const Color(0xFF1A2E22) : const Color(0xFFF0F4F2)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -1239,7 +1585,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     Text(
                       NepaliDateFormat('d').format(date),
                       style: TextStyle(
-                        color: isTop ? Colors.white70 : const Color(0x44FFFFFF),
+                        color: isTop ? (isDark ? Colors.white70 : Colors.black87) : (isDark ? const Color(0x44FFFFFF) : const Color(0x44000000)),
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1257,6 +1603,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   Widget _buildCalendar(BuildContext context, NepaliDateTime date) {
     final daysInMonth = _dateService.getDaysInMonth(date.year, date.month);
     final startWeekday = _dateService.getStartWeekday(date.year, date.month); // 1 (Sun) to 7 (Sat)
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Set of dates with spending
     final spentDates = _items
@@ -1267,9 +1614,10 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF141F18),
+        color: isDark ? const Color(0xFF141F18) : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF1E3025)),
+        border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFE0E5E2)),
+        boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))] : [],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1279,7 +1627,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             children: [
               Text(
                 _dateService.formatBSMonthYear(date).toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1),
               ),
               Row(
                 children: [
@@ -1344,7 +1692,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-                .map((d) => SizedBox(width: 20, child: Center(child: Text(d, style: const TextStyle(color: Color(0x44FFFFFF), fontSize: 9, fontWeight: FontWeight.w700)))) )
+                .map((d) => SizedBox(width: 20, child: Center(child: Text(d, style: TextStyle(color: isDark ? const Color(0x44FFFFFF) : const Color(0x44000000), fontSize: 9, fontWeight: FontWeight.w700)))))
                 .toList(),
           ),
           const SizedBox(height: 6),
@@ -1386,7 +1734,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                     Text(
                       '$dayNumber',
                       style: TextStyle(
-                        color: isToday ? const Color(0xFF4AB878) : Colors.white,
+                        color: isToday ? const Color(0xFF4AB878) : (isDark ? Colors.white : Colors.black),
                         fontSize: 11,
                         fontWeight: isToday || hasSpent ? FontWeight.w800 : FontWeight.w500,
                       ),
@@ -1403,13 +1751,19 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
 
   Widget _buildSpendByWeekChart(BuildContext context, List<String> labels, List<double> values) {
     final maxValue = values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF1E3025))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF141F18) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFE0E5E2)),
+        boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(2), blurRadius: 8, offset: const Offset(0, 3))] : [],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Spend by week', style: TextStyle(color: Color(0x99FFFFFF), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
+          Text('Spend by week', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 0.8)),
           const SizedBox(height: 14),
           Row(
             children: List.generate(values.length, (index) {
@@ -1422,9 +1776,9 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(height: height, width: 18, decoration: BoxDecoration(color: values[index] > maxValue * 0.65 ? const Color(0xFF4AB878) : const Color(0xFF1E3025), borderRadius: BorderRadius.circular(6))),
+                      Container(height: height, width: 18, decoration: BoxDecoration(color: values[index] > maxValue * 0.65 ? const Color(0xFF4AB878) : (isDark ? const Color(0xFF1E3025) : const Color(0xFFF0F4F2)), borderRadius: BorderRadius.circular(6))),
                       const SizedBox(height: 8),
-                      Text(labels[index], style: const TextStyle(color: Color(0x55FFFFFF), fontSize: 10)),
+                      Text(labels[index], style: TextStyle(color: isDark ? const Color(0x55FFFFFF) : const Color(0x55000000), fontSize: 10)),
                     ],
                   ),
                 ),
@@ -1439,9 +1793,16 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   Widget _buildInsightCard(BuildContext context) {
     final largest = _items.isEmpty ? 0.0 : _items.map((item) => item.total).reduce((a, b) => a > b ? a : b);
     final largestItem = _items.isEmpty ? null : _items.firstWhere((item) => item.total == largest, orElse: () => _items.first);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: const Color(0xFF172B1F), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF243A2C))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF172B1F) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2)),
+        boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))] : [],
+      ),
       padding: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1449,7 +1810,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           Container(
             width: 38,
             height: 38,
-            decoration: BoxDecoration(color: const Color(0x264AB878), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: const Color(0xFF4AB878).withAlpha(40), borderRadius: BorderRadius.circular(12)),
             child: const Center(child: Icon(Icons.spa, color: Color(0xFF4AB878), size: 18)),
           ),
           const SizedBox(width: 12),
@@ -1458,7 +1819,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
               largestItem == null
                   ? 'Add items to start tracking your biggest spend days.'
                   : 'Biggest purchase: ${largestItem.name} for NPR ${largestItem.total.toStringAsFixed(0)} on ${_dateService.formatBSDateLong(largestItem.date)}.',
-              style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 12, height: 1.5),
+              style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 12, height: 1.5),
             ),
           ),
         ],
@@ -1472,8 +1833,8 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 16,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.2,
@@ -1493,6 +1854,7 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   }
 
   Widget _buildPageHeader(String title, IconData icon, {Widget? trailing}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -1501,9 +1863,9 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: const Color(0xFF142E20),
+              color: const Color(0xFF4AB878).withAlpha(30),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF1E402C)),
+              border: Border.all(color: const Color(0xFF4AB878).withAlpha(100)),
             ),
             child: Icon(icon, color: const Color(0xFF4AB878), size: 22),
           ),
@@ -1511,8 +1873,8 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black,
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.5,
@@ -1526,101 +1888,143 @@ class _GroceryHomePageState extends State<GroceryHomePage> {
   }
 
   Widget _buildRecentItemRow(GroceryItem item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF1E3025))),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(color: const Color(0xFF1A2E22), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF243A2C))),
-            child: Center(child: Text(item.name.isNotEmpty ? item.name[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white, fontSize: 18))),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 3),
-                Text('${item.quantity} ${item.unit} · ${_dateService.formatBSMonthDay(item.date)}, ${_dateService.convertADToBS(item.date).year}', style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
-              ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onLongPress: () => _deleteItem(item),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF141F18) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFF0F4F2)),
+          boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(3), blurRadius: 8, offset: const Offset(0, 3))] : [],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4AB878).withAlpha(20),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(child: Text(item.name.isNotEmpty ? item.name[0].toUpperCase() : '?', style: const TextStyle(color: Color(0xFF4AB878), fontSize: 18, fontWeight: FontWeight.bold))),
             ),
-          ),
-          Text('NPR ${item.total.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFF4AB878), fontSize: 15, fontWeight: FontWeight.w700)),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.name, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 3),
+                  Text('${item.quantity} ${item.unit} · ${_dateService.formatBSMonthDay(item.date)}, ${_dateService.convertADToBS(item.date).year}', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 11)),
+                ],
+              ),
+            ),
+            Text('NPR ${item.total.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFF4AB878), fontSize: 15, fontWeight: FontWeight.w700)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildItemRow(GroceryItem item) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF1E3025))),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(color: const Color(0xFF1A2E22), borderRadius: BorderRadius.circular(12)),
-            child: Center(child: Text(item.name.isNotEmpty ? item.name[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white, fontSize: 18))),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item.name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 3),
-                Text('${item.quantity} ${item.unit} · ${_dateService.formatBSDateShort(item.date)}', style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
-              ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onLongPress: () => _deleteItem(item),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF141F18) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFF0F4F2)),
+          boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(3), blurRadius: 8, offset: const Offset(0, 3))] : [],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4AB878).withAlpha(20),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(child: Text(item.name.isNotEmpty ? item.name[0].toUpperCase() : '?', style: const TextStyle(color: Color(0xFF4AB878), fontSize: 18, fontWeight: FontWeight.bold))),
             ),
-          ),
-          Text('NPR ${item.total.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFF4AB878), fontWeight: FontWeight.w700)),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.name, style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 3),
+                  Text('${item.quantity} ${item.unit} · ${_dateService.formatBSDateShort(item.date)}', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 11)),
+                ],
+              ),
+            ),
+            Text('NPR ${item.total.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFF4AB878), fontWeight: FontWeight.w700)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildReportRow(GroceryItem item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF1E3025))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_dateService.formatBSDateLong(item.date), style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
-              Text(item.name, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
-            ],
-          ),
-          Text('NPR ${item.total.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFF4AB878), fontWeight: FontWeight.w700)),
-        ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onLongPress: () => _deleteItem(item),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF141F18) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFF0F4F2)),
+          boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(2), blurRadius: 6, offset: const Offset(0, 2))] : [],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_dateService.formatBSDateLong(item.date), style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(item.name, style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 11)),
+              ],
+            ),
+            Text('NPR ${item.total.toStringAsFixed(0)}', style: const TextStyle(color: Color(0xFF4AB878), fontWeight: FontWeight.w700)),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAccountAction(IconData icon, String text) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF1E3025))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF141F18) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isDark ? const Color(0xFF1E3025) : const Color(0xFFE0E5E2)),
+        boxShadow: !isDark ? [BoxShadow(color: Colors.black.withAlpha(5), blurRadius: 10, offset: const Offset(0, 4))] : [],
+      ),
       padding: const EdgeInsets.all(14),
       child: Row(
         children: [
           Container(
             width: 34,
             height: 34,
-            decoration: BoxDecoration(color: const Color(0x264AB878), borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: const Color(0xFF4AB878).withAlpha(30), borderRadius: BorderRadius.circular(10)),
             child: Icon(icon, color: const Color(0xFF4AB878), size: 16),
           ),
           const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 13))),
+          Expanded(child: Text(text, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 13))),
         ],
       ),
     );
@@ -1637,17 +2041,53 @@ class AddItemSheet extends StatefulWidget {
 class _AddItemSheetState extends State<AddItemSheet> {
   final _nameCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
-  double _qty = 1.0;
+  final _qtyCtrl = TextEditingController(text: '1');
+  final _totalCtrl = TextEditingController();
   NepaliDateTime _selectedDate = NepaliDateTime.now();
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceCtrl.addListener(_onPriceOrQtyChanged);
+    _qtyCtrl.addListener(_onPriceOrQtyChanged);
+    _totalCtrl.addListener(_onTotalChanged);
+  }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _priceCtrl.dispose();
+    _qtyCtrl.dispose();
+    _totalCtrl.dispose();
     super.dispose();
   }
 
-  double get _total => (double.tryParse(_priceCtrl.text) ?? 0.0) * _qty;
+  void _onPriceOrQtyChanged() {
+    if (_isUpdating) return;
+    _isUpdating = true;
+    final price = double.tryParse(_priceCtrl.text) ?? 0.0;
+    final qty = double.tryParse(_qtyCtrl.text) ?? 0.0;
+    final total = price * qty;
+    if (total > 0) {
+      _totalCtrl.text = total.toStringAsFixed(2);
+    } else {
+      _totalCtrl.clear();
+    }
+    _isUpdating = false;
+  }
+
+  void _onTotalChanged() {
+    if (_isUpdating) return;
+    _isUpdating = true;
+    final total = double.tryParse(_totalCtrl.text) ?? 0.0;
+    final qty = double.tryParse(_qtyCtrl.text) ?? 0.0;
+    if (qty > 0) {
+      final price = total / qty;
+      _priceCtrl.text = price.toStringAsFixed(2);
+    }
+    _isUpdating = false;
+  }
 
   Future<void> _pickDate() async {
     final picked = await showNepaliDatePicker(
@@ -1674,11 +2114,12 @@ class _AddItemSheetState extends State<AddItemSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0E1610),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0E1610) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -1690,19 +2131,23 @@ class _AddItemSheetState extends State<AddItemSheet> {
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: const Color(0xFF243A2C), borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2), borderRadius: BorderRadius.circular(2)),
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Add New Purchase', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700)),
+            Text('Add New Purchase', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 24, fontWeight: FontWeight.w700)),
             const SizedBox(height: 24),
-            const Text('Item Name', style: TextStyle(color: Color(0x99FFFFFF), fontSize: 13, fontWeight: FontWeight.w600)),
+            Text('Item Name', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             TextField(
               controller: _nameCtrl,
               autofocus: true,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(hintText: 'e.g. Fresh Milk', hintStyle: TextStyle(color: Color(0x33FFFFFF))),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              decoration: InputDecoration(
+                hintText: 'e.g. Fresh Milk',
+                hintStyle: TextStyle(color: isDark ? const Color(0x33FFFFFF) : const Color(0x33000000)),
+                fillColor: isDark ? const Color(0xFF141F18) : const Color(0xFFF8FAF9),
+              ),
             ),
             const SizedBox(height: 20),
             Row(
@@ -1711,22 +2156,50 @@ class _AddItemSheetState extends State<AddItemSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Quantity', style: TextStyle(color: Color(0x99FFFFFF), fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text('Quantity', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 13, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                        decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF243A2C))),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF141F18) : const Color(0xFFF8FAF9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2)),
+                        ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             IconButton(
-                              onPressed: () => setState(() => _qty = (_qty - 1).clamp(0.5, 999)),
-                              icon: const Icon(Icons.remove, color: Color(0xFF4AB878), size: 20),
+                              onPressed: () {
+                                final val = (double.tryParse(_qtyCtrl.text) ?? 1.0) - 1;
+                                if (val >= 0.5) _qtyCtrl.text = val.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+                              },
+                              icon: const Icon(Icons.remove, color: Color(0xFF4AB878), size: 18),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                             ),
-                            Text(_qty % 1 == 0 ? _qty.toInt().toString() : _qty.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+                            Expanded(
+                              child: TextField(
+                                controller: _qtyCtrl,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 15, fontWeight: FontWeight.w700),
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  filled: false,
+                                ),
+                              ),
+                            ),
                             IconButton(
-                              onPressed: () => setState(() => _qty += 1),
-                              icon: const Icon(Icons.add, color: Color(0xFF4AB878), size: 20),
+                              onPressed: () {
+                                final val = (double.tryParse(_qtyCtrl.text) ?? 0.0) + 1;
+                                _qtyCtrl.text = val.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+                              },
+                              icon: const Icon(Icons.add, color: Color(0xFF4AB878), size: 18),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                             ),
                           ],
                         ),
@@ -1739,14 +2212,41 @@ class _AddItemSheetState extends State<AddItemSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Rate (NPR)', style: TextStyle(color: Color(0x99FFFFFF), fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text('Rate (NPR)', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 13, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _priceCtrl,
                         keyboardType: TextInputType.number,
-                        style: const TextStyle(color: Colors.white),
-                        onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(hintText: '0.00', hintStyle: TextStyle(color: Color(0x33FFFFFF))),
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                        decoration: InputDecoration(
+                          hintText: '0.00',
+                          hintStyle: TextStyle(color: isDark ? const Color(0x33FFFFFF) : const Color(0x33000000)),
+                          fillColor: isDark ? const Color(0xFF141F18) : const Color(0xFFF8FAF9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Total Amount (NPR)', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _totalCtrl,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                        decoration: InputDecoration(
+                          hintText: '0.00',
+                          hintStyle: TextStyle(color: isDark ? const Color(0x33FFFFFF) : const Color(0x33000000)),
+                          fillColor: isDark ? const Color(0xFF141F18) : const Color(0xFFF8FAF9),
+                        ),
                       ),
                     ],
                   ),
@@ -1762,16 +2262,20 @@ class _AddItemSheetState extends State<AddItemSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Date of Purchase', style: TextStyle(color: Color(0x99FFFFFF), fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text('Date of Purchase', style: TextStyle(color: isDark ? const Color(0x99FFFFFF) : const Color(0x99000000), fontSize: 13, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF243A2C))),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF141F18) : const Color(0xFFF8FAF9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: isDark ? const Color(0xFF243A2C) : const Color(0xFFE0E5E2)),
+                          ),
                           child: Row(
                             children: [
                               const Icon(Icons.calendar_today, color: Color(0xFF4AB878), size: 18),
                               const SizedBox(width: 12),
-                              Text(NepaliDateFormat('MMM d, yyyy').format(_selectedDate), style: const TextStyle(color: Colors.white, fontSize: 14)),
+                              Text(NepaliDateFormat('MMM d, yyyy').format(_selectedDate), style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14)),
                             ],
                           ),
                         ),
@@ -1782,33 +2286,22 @@ class _AddItemSheetState extends State<AddItemSheet> {
               ],
             ),
             const SizedBox(height: 32),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: const Color(0xFF141F18), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF4AB878).withValues(alpha: 0.1))),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Total Amount', style: TextStyle(color: Color(0x99FFFFFF), fontSize: 14, fontWeight: FontWeight.w600)),
-                  Text('NPR ${_total.toStringAsFixed(2)}', style: const TextStyle(color: Color(0xFF4AB878), fontSize: 24, fontWeight: FontWeight.w800)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
                   final name = _nameCtrl.text.trim();
                   final price = double.tryParse(_priceCtrl.text) ?? 0.0;
-                  if (name.isEmpty || price <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter name and valid price')));
+                  final qty = double.tryParse(_qtyCtrl.text) ?? 0.0;
+                  if (name.isEmpty || price <= 0 || qty <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter name, valid quantity and price')));
                     return;
                   }
-                  Navigator.of(context).pop({'name': name, 'price': price, 'qty': _qty, 'date': _selectedDate.toDateTime()});
+                  Navigator.of(context).pop({'name': name, 'price': price, 'qty': qty, 'date': _selectedDate.toDateTime()});
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4AB878),
-                  foregroundColor: const Color(0xFF0E1610),
+                  foregroundColor: isDark ? const Color(0xFF0E1610) : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
@@ -1820,7 +2313,7 @@ class _AddItemSheetState extends State<AddItemSheet> {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel', style: TextStyle(color: Color(0x66FFFFFF), fontSize: 15)),
+                child: Text('Cancel', style: TextStyle(color: isDark ? const Color(0x66FFFFFF) : const Color(0x66000000), fontSize: 15)),
               ),
             ),
           ],
